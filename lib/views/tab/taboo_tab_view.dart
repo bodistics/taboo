@@ -9,10 +9,12 @@ class TabooTabView extends StatelessWidget {
 
   const TabooTabView({super.key,
     required this.tab,
+    required this.isActive,
     this.onCloseUnsaved,
     this.onTabClose,
     this.onTabTap });
 
+  final bool isActive;
   final TabooTab tab;
   final PageHandler? onTabTap;
   final PageHandler? onTabClose;
@@ -21,7 +23,7 @@ class TabooTabView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        color: tab.key == TabService().activeTabKey
+        color: isActive
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).disabledColor,
         constraints: const BoxConstraints(

@@ -40,28 +40,22 @@ class _EmptyStateTab extends StaticTab {
 }
 
 /// This service is in charge of the any actions made on the documents.
-class TabService {
-
-  factory TabService() {
-    return _singleton;
-  }
-  TabService._internal();
+class TabooController {
 
   final GlobalKey<NavigatorState>? navigatorKey = GlobalKey();
-  static final TabService _singleton = TabService._internal();
   static const String _stateKey = 'TabServiceState';
 
   final List<TabooTab> openedTabs = [];
-  final Map<ValueKey, DateTime> _pageTimestamps = {};
-  final BehaviorSubject pagesRx = BehaviorSubject.seeded([]);
-  final BehaviorSubject pageBarRx = BehaviorSubject.seeded([]);
+  final Map<ValueKey, DateTime> _tabTimestamps = {};
+  final BehaviorSubject tabsRx = BehaviorSubject.seeded([]);
+  final BehaviorSubject tabBarRx = BehaviorSubject.seeded([]);
 
   ValueKey? activeTabKey;
   String? openedProject;
   TabDeserializer? deserializer;
   Widget? emptyState;
 
-  TabooTab? get activePage {
+  TabooTab? get activeTab {
     try {
       return openedTabs.firstWhere((element) => element.key == activeTabKey);
     } catch(error) {
@@ -84,9 +78,9 @@ class TabService {
         }
       }
 
-      if (json.containsKey('pageTimestamps')) {
-        _pageTimestamps.clear();
-        _pageTimestamps.addAll((jsonDecode(json['pageTimestamps']) as Map).map<ValueKey, DateTime>((key, value) => MapEntry(ValueKey(key), DateTime.parse(value))));
+      if (json.containsKey('tabTimestamps')) {
+        _tabTimestamps.clear();
+        _tabTimestamps.addAll((jsonDecode(json['tabTimestamps']) as Map).map<ValueKey, DateTime>((key, value) => MapEntry(ValueKey(key), DateTime.parse(value))));
       }
 
       if (json.containsKey('openedProject')) {
@@ -101,13 +95,13 @@ class TabService {
   }
 
   void refreshPages() {
-    pagesRx.add(openedTabs);
+    tabsRx.add(openedTabs);
   }
 
   void markCurrentDocumentAsUnsaved() {
-    if (activePage != null && activePage is DocumentTab) {
-      (activePage as DocumentTab).isSaved = false;
-      pageBarRx.add(openedTabs);
+    if (activeTab != null && activeTab is DocumentTab) {
+      (activeTab as DocumentTab).isSaved = false;
+      tabBarRx.add(openedTabs);
     }
   }
 
@@ -117,7 +111,7 @@ class TabService {
     }
     final TabooTab item = openedTabs.removeAt(oldIndex);
     openedTabs.insert(newIndex, item);
-    pagesRx.add(openedTabs);
+    tabsRx.add(openedTabs);
   }
 
   void openTab(TabooTab tab, { DateTime? timestamp, int? index }) {
@@ -135,21 +129,23 @@ class TabService {
     }
 
     activeTabKey = tab.key;
-    _pageTimestamps[tab.key] = timestamp ?? DateTime.now();
-    pagesRx.add(openedTabs);
+    _tabTimestamps[tab.key] = timestamp ?? DateTime.now();
+    tabsRx.add(openedTabs);
+    tabBarRx.add(openedTabs);
     save();
   }
 
-  void closePage(TabooTab page) {
-    openedTabs.remove(page);
+  void closeTab(TabooTab tab) {
+    openedTabs.remove(tab);
     // We need to select the adjacent tab since this will be the
     // tab that will be shown in the content area of the app after the closure
     // of the active tab.
     if (openedTabs.isNotEmpty) {
       activeTabKey = getSortedTabs().last.key;
     }
-    _pageTimestamps.remove(page.key);
-    pagesRx.add(openedTabs);
+    _tabTimestamps.remove(tab.key);
+    tabsRx.add(openedTabs);
+    tabBarRx.add(openedTabs);
     save();
   }
 
@@ -157,10 +153,10 @@ class TabService {
     return openedTabs.firstWhere((element) => element is T && element.key == key) as T;
   }
 
-  bool replacePage(LocalKey oldPageKey, TabooTab newPage) {
-    int index = openedTabs.indexWhere((element) => element.key == oldPageKey);
+  bool replacePage(LocalKey oldTabKey, TabooTab newTab) {
+    int index = openedTabs.indexWhere((element) => element.key == oldTabKey);
     if (index >= 0) {
-      openedTabs[index] = newPage;
+      openedTabs[index] = newTab;
       refreshPages();
       return true;
     }
@@ -169,15 +165,15 @@ class TabService {
   }
 
   List<TabooTab> getSortedTabs() {
-    List<TabooTab> tabs = List.of(openedTabs)..sort((pageA, pageB) {
-      DateTime? pageATimestamp = _pageTimestamps[pageA.key];
-      DateTime? pageBTimestamp = _pageTimestamps[pageB.key];
+    List<TabooTab> tabs = List.of(openedTabs)..sort((tabA, tabB) {
+      DateTime? tabATimestamp = _tabTimestamps[tabA.key];
+      DateTime? tabBTimestamp = _tabTimestamps[tabB.key];
 
-      if (pageATimestamp != null && pageBTimestamp != null) {
-        return pageATimestamp.compareTo(pageBTimestamp);
+      if (tabATimestamp != null && tabBTimestamp != null) {
+        return tabATimestamp.compareTo(tabBTimestamp);
       }
 
-      throw Exception("Bodistics page was found without a timestamp");
+      throw Exception("Taboo: tab was found without a timestamp");
     });
     return tabs;
   }
@@ -186,7 +182,7 @@ class TabService {
     final List<TabooTab> tabs = getSortedTabs();
     tabs.insert(0, _EmptyStateTab(
         key: const ValueKey('EmptyStateTab'),
-        child: emptyState));
+        child: emptyState ?? const Text("No tabs opened")));
     return tabs.map<MaterialPage>((tab) => tab.page as MaterialPage).toList();
   }
 
@@ -196,7 +192,7 @@ class TabService {
           .where((e) => e.persist)
           .map((e) => e.toJson()).toList()),
       'activeTabKey': activeTabKey?.value,
-      'pageTimestamps': jsonEncode(_pageTimestamps.map<String, String>((key, value) => MapEntry(key.value, value.toIso8601String()))),
+      'tabTimestamps': jsonEncode(_tabTimestamps.map<String, String>((key, value) => MapEntry(key.value, value.toIso8601String()))),
       'openedProject': openedProject
     };
   }

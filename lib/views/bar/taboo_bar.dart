@@ -12,22 +12,17 @@ typedef TabBuilder = Widget Function(TabooTab);
 
 class TabooBar extends StatelessWidget {
   const TabooBar({
-    required this.tabs,
-    required this.onReorder,
     Key? key,
+    required this.controller,
     this.builder,
-    this.onPageTap,
-    this.onPageClose,
     this.onCloseUnsaved,
   }) : super(key: key);
 
-  final List<TabooTab> tabs;
-  final ReorderCallback onReorder;
-
+  final TabooController controller;
   final TabBuilder? builder;
-  final PageHandler? onPageTap;
-  final PageHandler? onPageClose;
   final CloseUnsavedRequest? onCloseUnsaved;
+
+  List<TabooTab> get tabs => controller.openedTabs;
 
   @override
   Widget build(BuildContext context) {
@@ -35,33 +30,45 @@ class TabooBar extends StatelessWidget {
     Color? selectedTabColor = Theme.of(context).tabBarTheme.labelColor;
     Color? barColor = Theme.of(context).colorScheme.surface;
 
-    return Container(
-        alignment: Alignment.centerLeft,
-        color: barColor,
-        height: 35,
-        child: tabs.isEmpty
-            ? Container()
-            : ReorderableListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: tabs.length,
-            dragStartBehavior: DragStartBehavior.start,
-            buildDefaultDragHandles: false,
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              final TabooTab tab = tabs[index];
-              return StreamBuilder(
-                  key: tab.key,
-                  stream: tab.listener,
-                  builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    return ReorderableDragStartListener(
-                      index: index,
-                      child: builder?.call(tab) ?? TabooTabView(tab: tab)
-                    );
-                  }
-              );
-            },
-            onReorder: onReorder
-        )
+    return StreamBuilder(
+      stream: controller.tabBarRx,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        return Container(
+            alignment: Alignment.centerLeft,
+            color: barColor,
+            height: 35,
+            child: tabs.isEmpty
+                ? Container()
+                : ReorderableListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: tabs.length,
+                dragStartBehavior: DragStartBehavior.start,
+                buildDefaultDragHandles: false,
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  final TabooTab tab = tabs[index];
+                  return StreamBuilder(
+                      key: tab.key,
+                      stream: tab.listener,
+                      builder: (BuildContext context, AsyncSnapshot snapshot) {
+                        return ReorderableDragStartListener(
+                            index: index,
+                            child: builder?.call(tab) ??
+                              TabooTabView(
+                                tab: tab,
+                                isActive: tab == controller.activeTab,
+                                onCloseUnsaved: onCloseUnsaved,
+                                onTabClose: controller.closeTab,
+                                onTabTap: controller.openTab,
+                              )
+                        );
+                      }
+                  );
+                },
+                onReorder: controller.reorderTab
+            )
+        );
+      }
     );
   }
 }
