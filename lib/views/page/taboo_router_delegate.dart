@@ -11,19 +11,24 @@ class TabooRouterDelegate<T> extends RouterDelegate<T>
 
   @override
   Widget build(BuildContext context) {
-    return  HeroControllerScope.none(
-        child: Navigator(
-            key: controller.navigatorKey,
-            observers: [_heroController],
-            onGenerateRoute:
-                (RouteSettings route) {
-              return null;
-            },
-            onPopPage: (route, result) {
-              return true;
-            },
-            pages: controller.getPageStack()
-        )
+    return StreamBuilder(
+        stream: controller.tabsRx,
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          return  HeroControllerScope.none(
+              child: Navigator(
+                  key: controller.navigatorKey,
+                  observers: [_heroController],
+                  onGenerateRoute:
+                      (RouteSettings route) {
+                    return null;
+                  },
+                  onPopPage: (route, result) {
+                    return true;
+                  },
+                  pages: controller.getPageStack()
+              )
+          );
+        }
     );
   }
 

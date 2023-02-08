@@ -8,15 +8,10 @@ class TabooPageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: controller.tabsRx,
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          return Router(
-              routerDelegate: TabooRouterDelegate(
-                  controller: controller
-              )
-          );
-        }
+    return Router(
+        routerDelegate: TabooRouterDelegate(
+            controller: controller
+        )
     );
   }
 }
