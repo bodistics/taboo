@@ -9,4 +9,4 @@ export 'package:taboo/tabs/taboo_tab.dart';
 
 export 'package:taboo/views/bar/taboo_bar.dart';
 export 'package:taboo/views/tab/taboo_tab_view.dart';
-export 'package:taboo/views/page/taboo_page_view.dart';
+export 'package:taboo/views/page/taboo_router_delegate.dart';

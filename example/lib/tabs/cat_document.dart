@@ -18,7 +18,7 @@ class CatDocument extends DocumentTab<Cat> {
   ValueKey get key => ValueKey(cat.name);
 
   @override
-  Page get page => TabooPage(child: CatView(cat: state));
+  Page get page => TabooPage(key: key, name: cat.name, child: CatView(cat: state));
 
   @override
   bool get persist => false;

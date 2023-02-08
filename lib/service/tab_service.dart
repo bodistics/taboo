@@ -42,7 +42,7 @@ class _EmptyStateTab extends StaticTab {
 /// This service is in charge of the any actions made on the documents.
 class TabooController {
 
-  final GlobalKey<NavigatorState>? navigatorKey = GlobalKey();
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   static const String _stateKey = 'TabServiceState';
 
   final List<TabooTab> openedTabs = [];

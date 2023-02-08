@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:taboo/service/tab_service.dart';
 import 'package:taboo/views/bar/taboo_bar.dart';
 import 'package:taboo/views/page/taboo_page_view.dart';
+import 'package:taboo/views/page/taboo_router_delegate.dart';
 
 import 'models/cat.dart';
 
@@ -103,10 +104,8 @@ class _MyHomePageState extends State<MyHomePage> {
             Expanded(
               child: Container(
                 color: Colors.amber,
-                child: Router(
-                  routerDelegate: TabooPageView(
+                child: TabooPageView(
                     controller: _tabooController
-                  ),
                 ),
               )
             ),
